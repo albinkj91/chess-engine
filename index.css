@@ -1,0 +1,54 @@
+body{
+	background-color: #308080;
+	display: flex;
+	justify-content: center;
+}
+
+#content{
+	display: flex;
+	flex-direction: column;
+}
+
+#files{
+	height: 75px;
+	display: flex;
+	justify-content: space-evenly;
+	gap: 28px;
+	margin-left: 43px;
+}
+
+#bottom{
+	display: flex;
+}
+
+#ranks{
+	width: 40px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+}
+
+#board{
+	width: 730px;
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	background-color: #502020;
+	border: #eeddaa solid 4px;
+	border-radius: 5px;
+	padding: 5px;
+	box-shadow: 5px 5px 10px;
+}
+
+.tile{
+	height: 90px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.mark{
+	height: 40px;
+	width: 40px;
+	border-radius: 20px;
+	background-color: rgba(0, 0, 0, 0.4);
+}
