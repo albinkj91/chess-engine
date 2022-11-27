@@ -91,21 +91,40 @@ const getValidKingMoves = (piece) =>{
 const getValidPawnMoves = (piece) =>{
 	let moves = [];
 	if(piece.color === BLACK){
-		if(piece.firstMove){
+		if(piece.firstMove && boardState[piece.rank - 2][piece.file] === 0){
 			moves.push({rank: piece.rank - 2, file: piece.file})
 		}
-		if(piece.rank > 0)						moves.push({rank: piece.rank - 1, file: piece.file});
-		if(piece.rank > 0 && piece.file > 0)	moves.push({rank: piece.rank - 1, file: piece.file - 1});
-		if(piece.rank > 0 && piece.file < 7)	moves.push({rank: piece.rank - 1, file: piece.file + 1});
+		if(piece.rank > 0 && boardState[piece.rank-1][piece.file] === 0){
+			moves.push({rank: piece.rank - 1, file: piece.file});
+		}
+		if(piece.rank > 0 && piece.file > 0
+			&& boardState[piece.rank-1][piece.file-1] !== 0
+			&& boardState[piece.rank-1][piece.file-1].color !== turn){
+			moves.push({rank: piece.rank - 1, file: piece.file - 1});
+		}
+		if(piece.rank > 0 && piece.file < 7
+			&& boardState[piece.rank-1][piece.file+1] !== 0
+			&& boardState[piece.rank-1][piece.file+1].color !== turn){
+			moves.push({rank: piece.rank - 1, file: piece.file + 1});
+		}
 	}else{
-		if(piece.firstMove){
+		if(piece.firstMove && boardState[piece.rank + 2][piece.file] === 0){
 			moves.push({rank: piece.rank + 2, file: piece.file})
 		}
-		if(piece.rank < 7)						moves.push({rank: piece.rank + 1, file: piece.file});
-		if(piece.rank < 7 && piece.file > 0)	moves.push({rank: piece.rank + 1, file: piece.file - 1});
-		if(piece.rank < 7 && piece.file < 7)	moves.push({rank: piece.rank + 1, file: piece.file + 1});
+		if(piece.rank < 7 && boardState[piece.rank+1][piece.file] === 0){
+			moves.push({rank: piece.rank + 1, file: piece.file});
+		}
+		if(piece.rank < 7 && piece.file > 0
+			&& boardState[piece.rank+1][piece.file-1] !== 0
+			&& boardState[piece.rank+1][piece.file-1].color !== turn){
+			moves.push({rank: piece.rank + 1, file: piece.file - 1});
+		}
+		if(piece.rank < 7 && piece.file < 7
+			&& boardState[piece.rank+1][piece.file+1] !== 0
+			&& boardState[piece.rank+1][piece.file+1].color !== turn){
+			moves.push({rank: piece.rank + 1, file: piece.file + 1});
+		}
 	}
-	console.log('Moves:', moves);
 	return moves;
 };
 
