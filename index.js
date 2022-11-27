@@ -24,6 +24,8 @@ function Piece(type, rank, file, color){
 	this.file = file,
 	this.color = color,
 	this.firstMove = true,
+	this.markable = true,
+	this.enPassant = false,
 	this.allowedMoves = []
 };
 
@@ -91,8 +93,19 @@ const getValidKingMoves = (piece) =>{
 const getValidPawnMoves = (piece) =>{
 	let moves = [];
 	if(piece.color === BLACK){
-		if(piece.firstMove && boardState[piece.rank - 2][piece.file] === 0){
-			moves.push({rank: piece.rank - 2, file: piece.file})
+		if(piece.firstMove && boardState[piece.rank-2][piece.file] === 0){
+			moves.push({rank: piece.rank - 2, file: piece.file});
+			if(piece.file > 0
+				&& boardState[piece.rank-2][piece.file-1] !== 0
+				&& boardState[piece.rank-2][piece.file-1].type === PAWN
+				&& boardState[piece.rank-2][piece.file-1].color !== turn){
+				piece.enPassant = true;
+			}else if(piece.file < 7
+				&& boardState[piece.rank-2][piece.file+1] !== 0
+				&& boardState[piece.rank-2][piece.file+1].type === PAWN
+				&& boardState[piece.rank-2][piece.file-1].color !== turn){
+				piece.enPassant = true;
+			}
 		}
 		if(piece.rank > 0 && boardState[piece.rank-1][piece.file] === 0){
 			moves.push({rank: piece.rank - 1, file: piece.file});
@@ -109,7 +122,18 @@ const getValidPawnMoves = (piece) =>{
 		}
 	}else{
 		if(piece.firstMove && boardState[piece.rank + 2][piece.file] === 0){
-			moves.push({rank: piece.rank + 2, file: piece.file})
+			moves.push({rank: piece.rank + 2, file: piece.file});
+			if(piece.file > 0
+				&& boardState[piece.rank+2][piece.file-1] !== 0
+				&& boardState[piece.rank+2][piece.file-1].type === PAWN
+				&& boardState[piece.rank+2][piece.file-1].color !== turn){
+				piece.enPassant = true;
+			}else if(piece.file < 7
+				&& boardState[piece.rank+2][piece.file+1] !== 0
+				&& boardState[piece.rank+2][piece.file+1].type === PAWN
+				&& boardState[piece.rank+2][piece.file-1].color !== turn){
+				piece.enPassant = true;
+			}
 		}
 		if(piece.rank < 7 && boardState[piece.rank+1][piece.file] === 0){
 			moves.push({rank: piece.rank + 1, file: piece.file});
@@ -134,10 +158,15 @@ const highlightValidMoves = (moves) =>{
 
 	tiles.forEach(x => {
 		if(moveIds.includes(x.id)){
-			const mark = document.createElement('div');
-			mark.setAttribute('class', 'mark');
-			x.appendChild(mark);
-			console.log(x);
+			if(boardState[parseInt(x.id[0])][parseInt(x.id[1])] === 0){
+				const mark = document.createElement('div');
+				mark.setAttribute('class', 'mark');
+				x.appendChild(mark);
+			}else{
+				boardState[parseInt(x.id[0])][parseInt(x.id[1])].markable = false;
+				x.childNodes[0].style.borderRadius = '50%';
+				x.childNodes[0].style.border = '4px solid rgba(0, 0, 0, 0.4)';
+			}
 		}
 	});
 };
@@ -159,38 +188,47 @@ const getValidMoves = (piece) =>{
 	return moves;
 };
 
-const highlightTile = (element, color) =>{
-	element.style.backgroundColor = color;
+const highlightTile = (tile, color) =>{
+	tile.style.backgroundColor = color;
 };
 
-const markTile = (element, color) =>{
-	element.style.boxShadow = '4px 4px 4px black';
-	element.style.border = `4px solid ${color}`;
-	element.style.borderRadius = '3px';
+const getPiece = (tile) =>{
+	return boardState[parseInt(tile.id[0])][parseInt(tile.id[1])];
 };
 
-const unmarkPiece = (piece) =>{
-	piece.style.boxShadow = '';
-	piece.style.border = '';
-	piece.style.borderRadius = '';
+const markTile = (tile, color) =>{
+	const piece = getPiece(tile.parentElement);
+	if(piece.markable && piece.color === turn){
+		tile.style.boxShadow = '4px 4px 4px black';
+		tile.style.border = `4px solid ${color}`;
+		tile.style.borderRadius = '3px';
+	}
 };
 
-const configPiece = (htmlElement, piece) =>{
+const unmarkTile = (tile) =>{
+	if(getPiece(tile.parentElement).markable){
+		tile.style.boxShadow = '';
+		tile.style.border = '';
+		tile.style.borderRadius = '';
+	}
+};
+
+const configPiece = (tile, piece) =>{
 	const img = document.createElement('img');
-	htmlElement.addEventListener('mouseenter', () => {
+	tile.addEventListener('mouseenter', () => {
 		markTile(img, '#308080');
 	});
-	htmlElement.addEventListener('mouseleave', () => {
-		unmarkPiece(img);
+	tile.addEventListener('mouseleave', () => {
+		unmarkTile(img);
 	});
-	htmlElement.appendChild(img);
+	tile.appendChild(img);
 	if(piece.color === 0){
 		img.src = `./assets/${piece.type}_white.png`
 	}else{
 		img.src = `./assets/${piece.type}_black.png`
 
 	}
-	return htmlElement;
+	return tile;
 };
 
 const clearBoard = () =>{
@@ -221,10 +259,6 @@ const arrayContainsPosition = (array, positionObject) =>{
 const tileClick = (tile) =>{
 	const rank = parseInt(tile.id[0]);
 	const file = parseInt(tile.id[1]);
-
-	if(selectedPiece !== undefined){
-		console.log(selectedPiece.allowedMoves);
-	}
 
 	if(selectedPiece === undefined){
 		selectedPiece = boardState[rank][file];
