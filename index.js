@@ -26,7 +26,7 @@ function Piece(type, rank, file, color){
 	this.firstMove = true,
 	this.markable = true,
 	this.enPassant = false,
-	this.allowedMoves = []
+	this.validMoves = []
 };
 
 for(let i = 0; i < 8; i++){
@@ -86,66 +86,69 @@ const getValidKingMoves = (piece) =>{
 	if(piece.rank > 0 && piece.file < 7)	moves.push({rank: piece.rank - 1, file: piece.file + 1});
 	if(piece.rank < 7 && piece.file > 0)	moves.push({rank: piece.rank + 1, file: piece.file - 1});
 
-	moves = moves.filter(x => boardState[x.rank][x.file] === 0 || boardState[x.rank][x.file].color !== turn);
+	moves = moves.filter(x => getPieceByPos(x.rank, x.file) === 0 || getPieceByPos(x.rank, x.file).color !== turn);
 	return moves;
 };
 
 const getValidPawnMoves = (piece) =>{
 	let moves = [];
 	if(piece.color === BLACK){
-		if(piece.firstMove && boardState[piece.rank-2][piece.file] === 0){
+		if(piece.firstMove && getPieceByPos(piece.rank-2, piece.file) === 0){
 			moves.push({rank: piece.rank - 2, file: piece.file});
 			if(piece.file > 0
-				&& boardState[piece.rank-2][piece.file-1] !== 0
-				&& boardState[piece.rank-2][piece.file-1].type === PAWN
-				&& boardState[piece.rank-2][piece.file-1].color !== turn){
+				&& getPieceByPos(piece.rank-2, piece.file-1) !== 0
+				&& getPieceByPos(piece.rank-2, piece.file-1).type === PAWN
+				&& getPieceByPos(piece.rank-2, piece.file-1).color !== turn){
 				piece.enPassant = true;
 			}else if(piece.file < 7
-				&& boardState[piece.rank-2][piece.file+1] !== 0
-				&& boardState[piece.rank-2][piece.file+1].type === PAWN
-				&& boardState[piece.rank-2][piece.file-1].color !== turn){
+				&& getPieceByPos(piece.rank-2, piece.file+1) !== 0
+				&& getPieceByPos(piece.rank-2, piece.file+1).type === PAWN
+				&& getPieceByPos(piece.rank-2, piece.file+1).color !== turn){
 				piece.enPassant = true;
 			}
 		}
-		if(piece.rank > 0 && boardState[piece.rank-1][piece.file] === 0){
+		if(piece.rank > 0 && getPieceByPos(piece.rank-1, piece.file) === 0){
 			moves.push({rank: piece.rank - 1, file: piece.file});
 		}
 		if(piece.rank > 0 && piece.file > 0
-			&& boardState[piece.rank-1][piece.file-1] !== 0
-			&& boardState[piece.rank-1][piece.file-1].color !== turn){
+			&& getPieceByPos(piece.rank-1, piece.file-1) !== 0
+			&& getPieceByPos(piece.rank-1, piece.file-1).color !== turn){
 			moves.push({rank: piece.rank - 1, file: piece.file - 1});
 		}
 		if(piece.rank > 0 && piece.file < 7
-			&& boardState[piece.rank-1][piece.file+1] !== 0
-			&& boardState[piece.rank-1][piece.file+1].color !== turn){
+			&& getPieceByPos(piece.rank-1, piece.file+1) !== 0
+			&& getPieceByPos(piece.rank-1, piece.file+1).color !== turn){
 			moves.push({rank: piece.rank - 1, file: piece.file + 1});
 		}
+		// TODO: if(enPassantPossible(piece)){
+		// 	moves.push({rank: piece.rank, file: piece.file + 1);
+		// }
 	}else{
-		if(piece.firstMove && boardState[piece.rank + 2][piece.file] === 0){
+		if(piece.firstMove && getPieceByPos(piece.rank + 2, piece.file) === 0){
 			moves.push({rank: piece.rank + 2, file: piece.file});
 			if(piece.file > 0
-				&& boardState[piece.rank+2][piece.file-1] !== 0
-				&& boardState[piece.rank+2][piece.file-1].type === PAWN
-				&& boardState[piece.rank+2][piece.file-1].color !== turn){
+				&& getPieceByPos(piece.rank+2, piece.file-1) !== 0
+				&& getPieceByPos(piece.rank+2, piece.file-1).type === PAWN
+				&& getPieceByPos(piece.rank+2, piece.file-1).color !== turn){
 				piece.enPassant = true;
 			}else if(piece.file < 7
-				&& boardState[piece.rank+2][piece.file+1] !== 0
-				&& boardState[piece.rank+2][piece.file+1].type === PAWN
-				&& boardState[piece.rank+2][piece.file-1].color !== turn){
+				&& getPieceByPos(piece.rank+2, piece.file+1) !== 0
+				&& getPieceByPos(piece.rank+2, piece.file+1).type === PAWN
+				&& getPieceByPos(piece.rank+2, piece.file+1).color !== turn){
 				piece.enPassant = true;
 			}
 		}
-		if(piece.rank < 7 && boardState[piece.rank+1][piece.file] === 0){
+		if(piece.rank < 7 && getPieceByPos(piece.rank+1, piece.file) === 0){
 			moves.push({rank: piece.rank + 1, file: piece.file});
 		}
 		if(piece.rank < 7 && piece.file > 0
-			&& boardState[piece.rank+1][piece.file-1] !== 0
-			&& boardState[piece.rank+1][piece.file-1].color !== turn){
+			&& getPieceByPos(piece.rank+1, piece.file-1) !== 0
+			&& getPieceByPos(piece.rank+1, piece.file-1).color !== turn){
 			moves.push({rank: piece.rank + 1, file: piece.file - 1});
 		}
 		if(piece.rank < 7 && piece.file < 7
-			&& boardState[piece.rank+1][piece.file+1] !== 0
-			&& boardState[piece.rank+1][piece.file+1].color !== turn){
+			&& getPieceByPos(piece.rank+1, piece.file+1) !== 0
+			&& getPieceByPos(piece.rank+1, piece.file+1).color !== turn){
 			moves.push({rank: piece.rank + 1, file: piece.file + 1});
 		}
 	}
@@ -158,12 +161,12 @@ const highlightValidMoves = (moves) =>{
 
 	tiles.forEach(x => {
 		if(moveIds.includes(x.id)){
-			if(boardState[parseInt(x.id[0])][parseInt(x.id[1])] === 0){
+			if(getPieceByPos(parseInt(x.id[0]), parseInt(x.id[1])) === 0){
 				const mark = document.createElement('div');
 				mark.setAttribute('class', 'mark');
 				x.appendChild(mark);
 			}else{
-				boardState[parseInt(x.id[0])][parseInt(x.id[1])].markable = false;
+				getPieceByPos(parseInt(x.id[0]), parseInt(x.id[1])).markable = false;
 				x.childNodes[0].style.borderRadius = '50%';
 				x.childNodes[0].style.border = '4px solid rgba(0, 0, 0, 0.4)';
 			}
@@ -192,12 +195,16 @@ const highlightTile = (tile, color) =>{
 	tile.style.backgroundColor = color;
 };
 
-const getPiece = (tile) =>{
-	return boardState[parseInt(tile.id[0])][parseInt(tile.id[1])];
+const getPieceByTile = (tile) =>{
+	return getPieceByPos(parseInt(tile.id[0]), parseInt(tile.id[1]));
+};
+
+const getPieceByPos = (rank, file) =>{
+	return boardState[rank][file];
 };
 
 const markTile = (tile, color) =>{
-	const piece = getPiece(tile.parentElement);
+	const piece = getPieceByTile(tile.parentElement);
 	if(piece.markable && piece.color === turn){
 		tile.style.boxShadow = '4px 4px 4px black';
 		tile.style.border = `4px solid ${color}`;
@@ -206,7 +213,7 @@ const markTile = (tile, color) =>{
 };
 
 const unmarkTile = (tile) =>{
-	if(getPiece(tile.parentElement).markable){
+	if(getPieceByTile(tile.parentElement).markable){
 		tile.style.boxShadow = '';
 		tile.style.border = '';
 		tile.style.borderRadius = '';
@@ -247,9 +254,9 @@ const swapTurn = () =>{
 	}
 };
 
-const arrayContainsPosition = (array, positionObject) =>{
+const containsPosition = (array, position) =>{
 	for(const p of array){
-		if(p.rank === positionObject.rank && p.file === positionObject.file){
+		if(p.rank === position.rank && p.file === position.file){
 			return true;
 		}
 	}
@@ -261,16 +268,16 @@ const tileClick = (tile) =>{
 	const file = parseInt(tile.id[1]);
 
 	if(selectedPiece === undefined){
-		selectedPiece = boardState[rank][file];
+		selectedPiece = getPieceByPos(rank, file);
 		console.log('Clicked piece:', selectedPiece);
 		if(!validClick(selectedPiece)){
 			selectedPiece = undefined;
 		}else{
 			tile.style.backgroundColor = '#54AC63';
-			selectedPiece.allowedMoves = getValidMoves(selectedPiece);
+			selectedPiece.validMoves = getValidMoves(selectedPiece);
 		}
 	}
-	else if(arrayContainsPosition(selectedPiece.allowedMoves, {rank: rank, file: file})){
+	else if(containsPosition(selectedPiece.validMoves, {rank: rank, file: file})){
 		movePiece(selectedPiece, rank, file);
 		selectedPiece.firstMove = false;
 		swapTurn();
@@ -291,8 +298,8 @@ const renderBoard = () =>{
 			let tile = document.createElement('div');
 			tile.className = 'tile';
 			tile.id = `${i}${j}`;
-			if(boardState[i][j] !== 0){
-				tile = configPiece(tile, boardState[i][j]);
+			if(getPieceByPos(i, j) !== 0){
+				tile = configPiece(tile, getPieceByPos(i, j));
 			}
 
 			tile.style.backgroundColor = currentColor;
