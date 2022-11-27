@@ -18,11 +18,13 @@ let blackPawns = [];
 let x = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 let currentColor = whiteHex;
 
-function Piece(type, rank, file, color) {
+function Piece(type, rank, file, color){
 	this.type = type,
 	this.rank = rank,
 	this.file = file,
-	this.color = color
+	this.color = color,
+	this.firstMove = true,
+	this.allowedMoves = []
 };
 
 for(let i = 0; i < 8; i++){
@@ -71,27 +73,47 @@ const movePiece = (piece, destRank, destFile) =>{
 	}
 };
 
-const getValidKingMoves = (rank, file) =>{
+const getValidKingMoves = (piece) =>{
 	let moves = [];
-	if(rank > 0)				moves.push({rank: rank - 1, file: file});
-	if(rank < 7)				moves.push({rank: rank + 1, file: file});
-	if(file > 0)				moves.push({rank: rank, file: file - 1});
-	if(file < 7)				moves.push({rank: rank, file: file + 1});
-	if(rank > 0 && file > 0)	moves.push({rank: rank - 1, file: file - 1});
-	if(rank < 7 && file < 7)	moves.push({rank: rank + 1, file: file + 1});
-	if(rank > 0 && file < 7)	moves.push({rank: rank - 1, file: file + 1});
-	if(rank < 7 && file > 0)	moves.push({rank: rank + 1, file: file - 1});
+	if(piece.rank > 0)						moves.push({rank: piece.rank - 1, file: piece.file});
+	if(piece.rank < 7)						moves.push({rank: piece.rank + 1, file: piece.file});
+	if(piece.file > 0)						moves.push({rank: piece.rank, file: piece.file - 1});
+	if(piece.file < 7)						moves.push({rank: piece.rank, file: piece.file + 1});
+	if(piece.rank > 0 && piece.file > 0)	moves.push({rank: piece.rank - 1, file: piece.file - 1});
+	if(piece.rank < 7 && piece.file < 7)	moves.push({rank: piece.rank + 1, file: piece.file + 1});
+	if(piece.rank > 0 && piece.file < 7)	moves.push({rank: piece.rank - 1, file: piece.file + 1});
+	if(piece.rank < 7 && piece.file > 0)	moves.push({rank: piece.rank + 1, file: piece.file - 1});
 
 	moves = moves.filter(x => boardState[x.rank][x.file] === 0 || boardState[x.rank][x.file].color !== turn);
 	return moves;
 };
 
-const highlightValidMoves = (moves) =>{
+const getValidPawnMoves = (piece) =>{
+	let moves = [];
+	if(piece.color === BLACK){
+		if(piece.firstMove){
+			moves.push({rank: piece.rank - 2, file: piece.file})
+		}
+		if(piece.rank > 0)						moves.push({rank: piece.rank - 1, file: piece.file});
+		if(piece.rank > 0 && piece.file > 0)	moves.push({rank: piece.rank - 1, file: piece.file - 1});
+		if(piece.rank > 0 && piece.file < 7)	moves.push({rank: piece.rank - 1, file: piece.file + 1});
+	}else{
+		if(piece.firstMove){
+			moves.push({rank: piece.rank + 2, file: piece.file})
+		}
+		if(piece.rank < 7)						moves.push({rank: piece.rank + 1, file: piece.file});
+		if(piece.rank < 7 && piece.file > 0)	moves.push({rank: piece.rank + 1, file: piece.file - 1});
+		if(piece.rank < 7 && piece.file < 7)	moves.push({rank: piece.rank + 1, file: piece.file + 1});
+	}
 	console.log('Moves:', moves);
-	const temp = Array.of(board.childNodes)[0];
+	return moves;
+};
+
+const highlightValidMoves = (moves) =>{
+	const tiles = Array.of(board.childNodes)[0];
 	const moveIds = moves.map(x => `${x.rank}${x.file}`);
 
-	temp.forEach(x => {
+	tiles.forEach(x => {
 		if(moveIds.includes(x.id)){
 			const mark = document.createElement('div');
 			mark.setAttribute('class', 'mark');
@@ -102,13 +124,14 @@ const highlightValidMoves = (moves) =>{
 };
 
 const getValidMoves = (piece) =>{
-	const rank = piece.rank;
-	const file = piece.file;
 	let moves = [];
 
 	switch(piece.type){
+		case PAWN:
+			moves = getValidPawnMoves(piece);
+			break;
 		case KING:
-			moves = getValidKingMoves(rank, file);
+			moves = getValidKingMoves(piece);
 			break;
 		default:
 			console.log('Moves for this piece type not yet implemented');
@@ -167,10 +190,22 @@ const swapTurn = () =>{
 	}
 };
 
+const arrayContainsPosition = (array, positionObject) =>{
+	for(const p of array){
+		if(p.rank === positionObject.rank && p.file === positionObject.file){
+			return true;
+		}
+	}
+	return false;
+};
+
 const tileClick = (tile) =>{
 	const rank = parseInt(tile.id[0]);
 	const file = parseInt(tile.id[1]);
-	let allowedMoves = [];
+
+	if(selectedPiece !== undefined){
+		console.log(selectedPiece.allowedMoves);
+	}
 
 	if(selectedPiece === undefined){
 		selectedPiece = boardState[rank][file];
@@ -179,11 +214,12 @@ const tileClick = (tile) =>{
 			selectedPiece = undefined;
 		}else{
 			tile.style.backgroundColor = '#54AC63';
-			allowedMoves = getValidMoves(selectedPiece);
+			selectedPiece.allowedMoves = getValidMoves(selectedPiece);
 		}
 	}
-	else if(allowedMoves.includes({rank: rank, file: file})){
+	else if(arrayContainsPosition(selectedPiece.allowedMoves, {rank: rank, file: file})){
 		movePiece(selectedPiece, rank, file);
+		selectedPiece.firstMove = false;
 		swapTurn();
 		selectedPiece = undefined;
 		clearBoard();
