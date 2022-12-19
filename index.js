@@ -230,9 +230,9 @@ const configPiece = (tile, piece) =>{
 	});
 	tile.appendChild(img);
 	if(piece.color === 0){
-		img.src = `./assets/${piece.type}_white.png`
+		img.src = `./assets/white_${piece.type}.svg`
 	}else{
-		img.src = `./assets/${piece.type}_black.png`
+		img.src = `./assets/black_${piece.type}.svg`
 
 	}
 	return tile;
