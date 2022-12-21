@@ -4,6 +4,48 @@ body{
 	justify-content: center;
 }
 
+#taken-white{
+	display: flex;
+	height: 360px;
+	justify-content: center;
+	align-items: center;
+	width: 100px;
+	margin-right: 110px;
+	margin-top: 80px;
+	border-radius: 5px;
+	background-color: #502020;
+	box-shadow: 5px 5px 10px;
+}
+
+#taken-black{
+	display: flex;
+	height: 360px;
+	justify-content: center;
+	align-items: center;
+	width: 100px;
+	margin-left: 150px;
+	margin-top: 80px;
+	border-radius: 5px;
+	background-color: #eeddaa;
+	box-shadow: 5px 5px 10px;
+}
+
+#black{
+	width: 80px;
+}
+
+#white{
+	width: 80px;
+}
+
+#taken-white img{
+	width: 40px;
+}
+
+#taken-black img{
+	width: 40px;
+}
+
 #content{
 	display: flex;
 	flex-direction: column;

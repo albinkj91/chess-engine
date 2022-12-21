@@ -1,22 +1,26 @@
 const bottom = document.getElementById('bottom');
 const board = document.getElementById('board');
+const takenWhiteArea = document.getElementById('white');
+const takenBlackArea = document.getElementById('black');
 
 const WHITE = 0;
 const BLACK = 1;
-const blackHex = '#502020';
-const whiteHex = '#eeddaa';
+const black = '#502020';
+const white = '#eeddaa';
 const PAWN = 'pawn';
 const ROOK = 'rook';
 const KNIGHT = 'knight';
 const BISHOP = 'bishop';
 const QUEEN = 'queen';
 const KING = 'king';
+const takenWhite = [];
+const takenBlack = [];
 let turn = WHITE;
 let selectedPiece;
 let whitePawns = [];
 let blackPawns = [];
 let x = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-let currentColor = whiteHex;
+let currentColor = white;
 
 function Piece(type, rank, file, color){
 	this.type = type,
@@ -68,6 +72,15 @@ blackPawns.forEach(p => boardState[p.rank][p.file] = p);
 
 const movePiece = (piece, destRank, destFile) =>{
 	if(piece !== 0){
+		if(boardState[destRank][destFile] !== 0){
+			if(boardState[destRank][destFile].color === BLACK){
+				takenBlack.push(boardState[destRank][destFile]);
+				renderTaken(takenBlackArea, takenBlack);
+			}else{
+				takenWhite.push(boardState[destRank][destFile]);
+				renderTaken(takenWhiteArea, takenWhite);
+			}
+		}
 		boardState[destRank][destFile] = piece;
 		boardState[piece.rank][piece.file] = 0;
 		piece.rank = destRank;
@@ -120,9 +133,8 @@ const getValidPawnMoves = (piece) =>{
 			&& getPieceByPos(piece.rank-1, piece.file+1).color !== turn){
 			moves.push({rank: piece.rank - 1, file: piece.file + 1});
 		}
-		// TODO: if(enPassantPossible(piece)){
-		// 	moves.push({rank: piece.rank, file: piece.file + 1);
-		// }
+		getEnPassantMoves(piece, boardState)
+			.forEach(x => moves.push({rank: x.rank - 1, file: x.file}));
 	}else{
 		if(piece.firstMove && getPieceByPos(piece.rank + 2, piece.file) === 0){
 			moves.push({rank: piece.rank + 2, file: piece.file});
@@ -155,6 +167,15 @@ const getValidPawnMoves = (piece) =>{
 	return moves;
 };
 
+const getEnPassantMoves = (piece, boardState) =>{
+	return boardState
+		.flatMap(x => x)
+		.filter(x =>
+			x.enPassant && x.color !== piece.color &&
+			(x.file === piece.file + 1 && x.rank === piece.rank
+			|| x.file === piece.file - 1 && x.rank === piece.rank));
+};
+
 const highlightValidMoves = (moves) =>{
 	const tiles = Array.of(board.childNodes)[0];
 	const moveIds = moves.map(x => `${x.rank}${x.file}`);
@@ -166,7 +187,7 @@ const highlightValidMoves = (moves) =>{
 				mark.setAttribute('class', 'mark');
 				x.appendChild(mark);
 			}else{
-				getPieceByPos(parseInt(x.id[0]), parseInt(x.id[1])).markable = false;
+				//getPieceByPos(parseInt(x.id[0]), parseInt(x.id[1])).markable = false;
 				x.childNodes[0].style.borderRadius = '50%';
 				x.childNodes[0].style.border = '4px solid rgba(0, 0, 0, 0.4)';
 			}
@@ -291,6 +312,20 @@ const tileClick = (tile) =>{
 	}
 };
 
+const renderTaken = (area, takenPieces) =>{
+	area.innerHTML = '';
+	takenPieces.forEach(x => {
+		let img = document.createElement('img');
+		img.className = 'taken-img';
+		if(area.id === 'black'){
+			img.src = `./assets/black_${x.type}.svg`;
+		}else{
+			img.src = `./assets/white_${x.type}.svg`;
+		}
+		area.appendChild(img);
+	});
+};
+
 const renderBoard = () =>{
 	console.log('BOARD_RENDER');
 	for(let i = 0; i < 8; i++){
@@ -303,10 +338,10 @@ const renderBoard = () =>{
 			}
 
 			tile.style.backgroundColor = currentColor;
-			if(currentColor === blackHex){
-				currentColor = whiteHex;
+			if(currentColor === black){
+				currentColor = white;
 			}else{
-				currentColor = blackHex;
+				currentColor = black;
 			}
 
 			tile.addEventListener('click', () => {
@@ -314,10 +349,10 @@ const renderBoard = () =>{
 			});
 			board.appendChild(tile);
 		}
-		if(currentColor === blackHex){
-			currentColor = whiteHex;
+		if(currentColor === black){
+			currentColor = white;
 		}else{
-			currentColor = blackHex;
+			currentColor = black;
 		}
 	}
 };
