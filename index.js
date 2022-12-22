@@ -28,7 +28,6 @@ function Piece(type, rank, file, color){
 	this.file = file,
 	this.color = color,
 	this.firstMove = true,
-	this.markable = true,
 	this.enPassant = false,
 	this.validMoves = []
 };
@@ -67,25 +66,33 @@ const boardState = [
 	]
 ];
 
-whitePawns.forEach(p => boardState[p.rank][p.file] = p);
-blackPawns.forEach(p => boardState[p.rank][p.file] = p);
+const getPiece = (rank, file) =>{
+	return boardState[rank][file];
+};
+
+const setPiece = (rank, file, value) =>{
+	boardState[rank][file] = value;
+};
+
+const getPieceByTile = (tile) =>{
+	return getPiece(parseInt(tile.id[0]), parseInt(tile.id[1]));
+};
+
+whitePawns.forEach(p => setPiece(p.rank, p.file, p));
+blackPawns.forEach(p => setPiece(p.rank, p.file, p));
 
 const movePiece = (piece, destRank, destFile) =>{
-	if(piece !== 0){
-		if(boardState[destRank][destFile] !== 0){
-			if(boardState[destRank][destFile].color === BLACK){
-				takenBlack.push(boardState[destRank][destFile]);
-				renderTaken(takenBlackArea, takenBlack);
-			}else{
-				takenWhite.push(boardState[destRank][destFile]);
-				renderTaken(takenWhiteArea, takenWhite);
-			}
+	if(getPiece(destRank, destFile) !== 0){
+		if(getPiece(destRank, destFile).color === BLACK){
+			takenBlack.push(getPiece(destRank, destFile));
+		}else{
+			takenWhite.push(getPiece(destRank, destFile));
 		}
-		boardState[destRank][destFile] = piece;
-		boardState[piece.rank][piece.file] = 0;
-		piece.rank = destRank;
-		piece.file = destFile;
 	}
+	setPiece(destRank, destFile, piece);
+	setPiece(piece.rank, piece.file, 0);
+	piece.rank = destRank;
+	piece.file = destFile;
 };
 
 const getValidKingMoves = (piece) =>{
@@ -99,70 +106,72 @@ const getValidKingMoves = (piece) =>{
 	if(piece.rank > 0 && piece.file < 7)	moves.push({rank: piece.rank - 1, file: piece.file + 1});
 	if(piece.rank < 7 && piece.file > 0)	moves.push({rank: piece.rank + 1, file: piece.file - 1});
 
-	moves = moves.filter(x => getPieceByPos(x.rank, x.file) === 0 || getPieceByPos(x.rank, x.file).color !== turn);
+	moves = moves.filter(x => getPiece(x.rank, x.file) === 0 || getPiece(x.rank, x.file).color !== turn);
 	return moves;
 };
 
 const getValidPawnMoves = (piece) =>{
 	let moves = [];
 	if(piece.color === BLACK){
-		if(piece.firstMove && getPieceByPos(piece.rank-2, piece.file) === 0){
+		if(piece.firstMove && getPiece(piece.rank-2, piece.file) === 0 && getPiece(piece.rank-1, piece.file) === 0){
 			moves.push({rank: piece.rank - 2, file: piece.file});
 			if(piece.file > 0
-				&& getPieceByPos(piece.rank-2, piece.file-1) !== 0
-				&& getPieceByPos(piece.rank-2, piece.file-1).type === PAWN
-				&& getPieceByPos(piece.rank-2, piece.file-1).color !== turn){
+				&& getPiece(piece.rank-2, piece.file-1) !== 0
+				&& getPiece(piece.rank-2, piece.file-1).type === PAWN
+				&& getPiece(piece.rank-2, piece.file-1).color !== turn){
 				piece.enPassant = true;
 			}else if(piece.file < 7
-				&& getPieceByPos(piece.rank-2, piece.file+1) !== 0
-				&& getPieceByPos(piece.rank-2, piece.file+1).type === PAWN
-				&& getPieceByPos(piece.rank-2, piece.file+1).color !== turn){
+				&& getPiece(piece.rank-2, piece.file+1) !== 0
+				&& getPiece(piece.rank-2, piece.file+1).type === PAWN
+				&& getPiece(piece.rank-2, piece.file+1).color !== turn){
 				piece.enPassant = true;
 			}
 		}
-		if(piece.rank > 0 && getPieceByPos(piece.rank-1, piece.file) === 0){
+		if(piece.rank > 0 && getPiece(piece.rank-1, piece.file) === 0){
 			moves.push({rank: piece.rank - 1, file: piece.file});
 		}
 		if(piece.rank > 0 && piece.file > 0
-			&& getPieceByPos(piece.rank-1, piece.file-1) !== 0
-			&& getPieceByPos(piece.rank-1, piece.file-1).color !== turn){
+			&& getPiece(piece.rank-1, piece.file-1) !== 0
+			&& getPiece(piece.rank-1, piece.file-1).color !== turn){
 			moves.push({rank: piece.rank - 1, file: piece.file - 1});
 		}
 		if(piece.rank > 0 && piece.file < 7
-			&& getPieceByPos(piece.rank-1, piece.file+1) !== 0
-			&& getPieceByPos(piece.rank-1, piece.file+1).color !== turn){
+			&& getPiece(piece.rank-1, piece.file+1) !== 0
+			&& getPiece(piece.rank-1, piece.file+1).color !== turn){
 			moves.push({rank: piece.rank - 1, file: piece.file + 1});
 		}
 		getEnPassantMoves(piece, boardState)
-			.forEach(x => moves.push({rank: x.rank - 1, file: x.file}));
+			.forEach(x => moves.push({rank: x.rank - 1, file: x.file, enPassantMove: true}));
 	}else{
-		if(piece.firstMove && getPieceByPos(piece.rank + 2, piece.file) === 0){
+		if(piece.firstMove && getPiece(piece.rank + 2, piece.file) === 0 && getPiece(piece.rank + 1, piece.file) === 0){
 			moves.push({rank: piece.rank + 2, file: piece.file});
 			if(piece.file > 0
-				&& getPieceByPos(piece.rank+2, piece.file-1) !== 0
-				&& getPieceByPos(piece.rank+2, piece.file-1).type === PAWN
-				&& getPieceByPos(piece.rank+2, piece.file-1).color !== turn){
+				&& getPiece(piece.rank+2, piece.file-1) !== 0
+				&& getPiece(piece.rank+2, piece.file-1).type === PAWN
+				&& getPiece(piece.rank+2, piece.file-1).color !== turn){
 				piece.enPassant = true;
 			}else if(piece.file < 7
-				&& getPieceByPos(piece.rank+2, piece.file+1) !== 0
-				&& getPieceByPos(piece.rank+2, piece.file+1).type === PAWN
-				&& getPieceByPos(piece.rank+2, piece.file+1).color !== turn){
+				&& getPiece(piece.rank+2, piece.file+1) !== 0
+				&& getPiece(piece.rank+2, piece.file+1).type === PAWN
+				&& getPiece(piece.rank+2, piece.file+1).color !== turn){
 				piece.enPassant = true;
 			}
 		}
-		if(piece.rank < 7 && getPieceByPos(piece.rank+1, piece.file) === 0){
+		if(piece.rank < 7 && getPiece(piece.rank+1, piece.file) === 0){
 			moves.push({rank: piece.rank + 1, file: piece.file});
 		}
 		if(piece.rank < 7 && piece.file > 0
-			&& getPieceByPos(piece.rank+1, piece.file-1) !== 0
-			&& getPieceByPos(piece.rank+1, piece.file-1).color !== turn){
+			&& getPiece(piece.rank+1, piece.file-1) !== 0
+			&& getPiece(piece.rank+1, piece.file-1).color !== turn){
 			moves.push({rank: piece.rank + 1, file: piece.file - 1});
 		}
 		if(piece.rank < 7 && piece.file < 7
-			&& getPieceByPos(piece.rank+1, piece.file+1) !== 0
-			&& getPieceByPos(piece.rank+1, piece.file+1).color !== turn){
+			&& getPiece(piece.rank+1, piece.file+1) !== 0
+			&& getPiece(piece.rank+1, piece.file+1).color !== turn){
 			moves.push({rank: piece.rank + 1, file: piece.file + 1});
 		}
+		getEnPassantMoves(piece, boardState)
+			.forEach(x => moves.push({rank: x.rank + 1, file: x.file, enPassantMove: true}));
 	}
 	return moves;
 };
@@ -176,18 +185,60 @@ const getEnPassantMoves = (piece, boardState) =>{
 			|| x.file === piece.file - 1 && x.rank === piece.rank));
 };
 
+const enPassantTake = (piece, rank, file) =>{
+	piece.validMoves.filter(x => x.enPassantMove && x.rank === rank && x.file === file)
+		.forEach(x =>{
+			if(piece.color === BLACK){
+				takenWhite.push(getPiece(rank+1, file));
+				setPiece(rank+1, file, 0);
+			}else{
+				takenBlack.push(getPiece(rank-1, file));
+				setPiece(rank-1, file, 0);
+			}
+		});
+};
+
+const removeExpiredEnPassant = (color) =>{
+	boardState.flatMap(x => x)
+		.filter(x => x.color === color && x.enPassant)
+		.forEach(x => x.enPassant = false);
+};
+
+const promote = (piece) =>{
+	if(piece.type === PAWN){
+		if(piece.color === BLACK && piece.rank === 0){
+			getAndPlacePromotionPiece(BLACK);
+		}else if(piece.color === WHITE && piece.rank === 7){
+			getAndPlacePromotionPiece(WHITE);
+		}
+	}
+};
+
+const getAndPlacePromotionPiece = (color) =>{
+	presentOptions(color);
+};
+
+const presentOptions = (color) =>{
+	let content = document.getElementById('content');
+	let popup = document.createElement('div');
+	let title = document.createElement('h1');
+	title.innerHTML = 'Choose a promotion piece:';
+	popup.appendChild(title);
+	popup.id = 'popup';
+	content.appendChild(popup);
+};
+
 const highlightValidMoves = (moves) =>{
 	const tiles = Array.of(board.childNodes)[0];
 	const moveIds = moves.map(x => `${x.rank}${x.file}`);
 
 	tiles.forEach(x => {
 		if(moveIds.includes(x.id)){
-			if(getPieceByPos(parseInt(x.id[0]), parseInt(x.id[1])) === 0){
+			if(getPiece(parseInt(x.id[0]), parseInt(x.id[1])) === 0){
 				const mark = document.createElement('div');
 				mark.setAttribute('class', 'mark');
 				x.appendChild(mark);
 			}else{
-				//getPieceByPos(parseInt(x.id[0]), parseInt(x.id[1])).markable = false;
 				x.childNodes[0].style.borderRadius = '50%';
 				x.childNodes[0].style.border = '4px solid rgba(0, 0, 0, 0.4)';
 			}
@@ -216,17 +267,9 @@ const highlightTile = (tile, color) =>{
 	tile.style.backgroundColor = color;
 };
 
-const getPieceByTile = (tile) =>{
-	return getPieceByPos(parseInt(tile.id[0]), parseInt(tile.id[1]));
-};
-
-const getPieceByPos = (rank, file) =>{
-	return boardState[rank][file];
-};
-
 const markTile = (tile, color) =>{
 	const piece = getPieceByTile(tile.parentElement);
-	if(piece.markable && piece.color === turn){
+	if(piece.color === turn){
 		tile.style.boxShadow = '4px 4px 4px black';
 		tile.style.border = `4px solid ${color}`;
 		tile.style.borderRadius = '3px';
@@ -234,11 +277,9 @@ const markTile = (tile, color) =>{
 };
 
 const unmarkTile = (tile) =>{
-	if(getPieceByTile(tile.parentElement).markable){
-		tile.style.boxShadow = '';
-		tile.style.border = '';
-		tile.style.borderRadius = '';
-	}
+	tile.style.boxShadow = '';
+	tile.style.border = '';
+	tile.style.borderRadius = '';
 };
 
 const configPiece = (tile, piece) =>{
@@ -289,22 +330,27 @@ const tileClick = (tile) =>{
 	const file = parseInt(tile.id[1]);
 
 	if(selectedPiece === undefined){
-		selectedPiece = getPieceByPos(rank, file);
+		selectedPiece = getPiece(rank, file);
 		console.log('Clicked piece:', selectedPiece);
 		if(!validClick(selectedPiece)){
 			selectedPiece = undefined;
 		}else{
 			tile.style.backgroundColor = '#54AC63';
+			removeExpiredEnPassant(selectedPiece.color);
 			selectedPiece.validMoves = getValidMoves(selectedPiece);
 		}
 	}
 	else if(containsPosition(selectedPiece.validMoves, {rank: rank, file: file})){
 		movePiece(selectedPiece, rank, file);
+		enPassantTake(selectedPiece, rank, file);
 		selectedPiece.firstMove = false;
+		promote(selectedPiece);
 		swapTurn();
 		selectedPiece = undefined;
 		clearBoard();
 		renderBoard();
+		renderTaken(takenBlackArea, takenBlack);
+		renderTaken(takenWhiteArea, takenWhite);
 	}else{
 		selectedPiece = undefined;
 		clearBoard();
@@ -333,8 +379,8 @@ const renderBoard = () =>{
 			let tile = document.createElement('div');
 			tile.className = 'tile';
 			tile.id = `${i}${j}`;
-			if(getPieceByPos(i, j) !== 0){
-				tile = configPiece(tile, getPieceByPos(i, j));
+			if(getPiece(i, j) !== 0){
+				tile = configPiece(tile, getPiece(i, j));
 			}
 
 			tile.style.backgroundColor = currentColor;

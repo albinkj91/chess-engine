@@ -94,3 +94,19 @@ body{
 	border-radius: 20px;
 	background-color: rgba(0, 0, 0, 0.4);
 }
+
+#popup{
+	position: absolute;
+	width: 800px;
+	height: 400px;
+	background-color: #eeddaa;
+	margin-top: 200px;
+	margin-left: 13px;
+	border: 2px black solid;
+	border-radius: 10px;
+	text-align: center;
+}
+
+#popup h1{
+	font-size: 40px;
+}
