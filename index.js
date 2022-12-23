@@ -97,22 +97,53 @@ const movePiece = (piece, destRank, destFile) =>{
 	piece.file = destFile;
 };
 
-const getValidKingMoves = (piece) =>{
+const getNorthernMoves = (rank, file) =>{
 	let moves = [];
-	if(piece.rank > 0)						moves.push({rank: piece.rank - 1, file: piece.file});
-	if(piece.rank < 7)						moves.push({rank: piece.rank + 1, file: piece.file});
-	if(piece.file > 0)						moves.push({rank: piece.rank, file: piece.file - 1});
-	if(piece.file < 7)						moves.push({rank: piece.rank, file: piece.file + 1});
-	if(piece.rank > 0 && piece.file > 0)	moves.push({rank: piece.rank - 1, file: piece.file - 1});
-	if(piece.rank < 7 && piece.file < 7)	moves.push({rank: piece.rank + 1, file: piece.file + 1});
-	if(piece.rank > 0 && piece.file < 7)	moves.push({rank: piece.rank - 1, file: piece.file + 1});
-	if(piece.rank < 7 && piece.file > 0)	moves.push({rank: piece.rank + 1, file: piece.file - 1});
-
-	moves = moves.filter(x => getPiece(x.rank, x.file) === 0 || getPiece(x.rank, x.file).color !== turn);
+	rank--;
+	while(rank >= 0){
+		if(getPiece(rank, file) !== 0){
+			moves.push({rank: rank, file: file});
+			break;
+		}
+		moves.push({rank: rank, file: file});
+		rank--;
+	}
 	return moves;
 };
 
-const getNorthernMoves = (rank, file) =>{
+const getNorthEasternMoves = (rank, file) =>{
+	let moves = [];
+	rank--;
+	file++;
+	while(rank >= 0 && file < 8){
+		if(getPiece(rank, file) !== 0){
+			moves.push({rank: rank, file: file});
+			break;
+		}
+		moves.push({rank: rank, file: file});
+		rank--;
+		file++;
+	}
+	return moves;
+};
+
+const getNorthWesternMoves = (rank, file) =>{
+	let moves = [];
+	rank--;
+	file--;
+	while(rank >= 0 && file >= 0){
+		if(getPiece(rank, file) !== 0){
+			moves.push({rank: rank, file: file});
+			break;
+		}
+		moves.push({rank: rank, file: file});
+		rank--;
+		file--;
+	}
+	return moves;
+};
+
+const getSouthernMoves = (rank, file) =>{
 	let moves = [];
 	rank++;
 	while(rank < 8){
@@ -126,16 +157,34 @@ const getNorthernMoves = (rank, file) =>{
 	return moves;
 };
 
-const getSouthernMoves = (rank, file) =>{
+const getSouthEasternMoves = (rank, file) =>{
 	let moves = [];
-	rank--;
-	while(rank >= 0){
+	rank++;
+	file++;
+	while(rank < 8 && file < 8){
 		if(getPiece(rank, file) !== 0){
 			moves.push({rank: rank, file: file});
 			break;
 		}
 		moves.push({rank: rank, file: file});
-		rank--;
+		rank++;
+		file++;
+	}
+	return moves;
+};
+
+const getSouthWesternMoves = (rank, file) =>{
+	let moves = [];
+	rank++;
+	file--;
+	while(rank < 8 && file >= 0){
+		if(getPiece(rank, file) !== 0){
+			moves.push({rank: rank, file: file});
+			break;
+		}
+		moves.push({rank: rank, file: file});
+		rank++;
+		file--;
 	}
 	return moves;
 };
@@ -168,12 +217,55 @@ const getWesternMoves = (rank, file) =>{
 	return moves;
 };
 
+const getValidKingMoves = (piece) =>{
+	let moves = [];
+	if(piece.rank > 0)						moves.push({rank: piece.rank - 1, file: piece.file});
+	if(piece.rank < 7)						moves.push({rank: piece.rank + 1, file: piece.file});
+	if(piece.file > 0)						moves.push({rank: piece.rank, file: piece.file - 1});
+	if(piece.file < 7)						moves.push({rank: piece.rank, file: piece.file + 1});
+	if(piece.rank > 0 && piece.file > 0)	moves.push({rank: piece.rank - 1, file: piece.file - 1});
+	if(piece.rank < 7 && piece.file < 7)	moves.push({rank: piece.rank + 1, file: piece.file + 1});
+	if(piece.rank > 0 && piece.file < 7)	moves.push({rank: piece.rank - 1, file: piece.file + 1});
+	if(piece.rank < 7 && piece.file > 0)	moves.push({rank: piece.rank + 1, file: piece.file - 1});
+
+	return moves
+		.filter(x => getPiece(x.rank, x.file) === 0
+		|| getPiece(x.rank, x.file).color !== turn);
+};
+
+const getValidQueenMoves = (piece) =>{
+	let moves = getNorthernMoves(piece.rank, piece.file);
+	moves.push(getSouthernMoves(piece.rank, piece.file));
+	moves.push(getWesternMoves(piece.rank, piece.file));
+	moves.push(getEasternMoves(piece.rank, piece.file));
+	moves.push(getNorthWesternMoves(piece.rank, piece.file));
+	moves.push(getNorthEasternMoves(piece.rank, piece.file));
+	moves.push(getSouthWesternMoves(piece.rank, piece.file));
+	moves.push(getSouthEasternMoves(piece.rank, piece.file));
+
+	return moves
+		.flatMap(x => x)
+		.filter(x => getPiece(x.rank, x.file) === 0
+			|| getPiece(x.rank, x.file).color !== turn);
+};
+
+const getValidBishopMoves = (piece) =>{
+	let moves = getNorthWesternMoves(piece.rank, piece.file);
+	moves.push(getNorthEasternMoves(piece.rank, piece.file));
+	moves.push(getSouthWesternMoves(piece.rank, piece.file));
+	moves.push(getSouthEasternMoves(piece.rank, piece.file));
+
+	return moves
+		.flatMap(x => x)
+		.filter(x => getPiece(x.rank, x.file) === 0
+			|| getPiece(x.rank, x.file).color !== turn);
+};
+
 const getValidRookMoves = (piece) =>{
 	let moves = getNorthernMoves(piece.rank, piece.file);
 	moves.push(getSouthernMoves(piece.rank, piece.file));
 	moves.push(getWesternMoves(piece.rank, piece.file));
 	moves.push(getEasternMoves(piece.rank, piece.file));
-	console.log(moves);
 
 	return moves
 		.flatMap(x => x)
@@ -346,6 +438,10 @@ const getValidMoves = (piece) =>{
 		case ROOK:
 			moves = getValidRookMoves(piece);
 			break
+		case BISHOP:
+			moves = getValidBishopMoves(piece);
+		case QUEEN:
+			moves = getValidQueenMoves(piece);
 		default:
 			console.log('Moves for this piece type not yet implemented');
 	}
