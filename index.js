@@ -216,10 +216,6 @@ const promote = (piece) =>{
 };
 
 const getAndPlacePromotionPiece = (piece) =>{
-	presentOptions(piece);
-};
-
-const presentOptions = (piece) =>{
 	let color;
 	if(piece.color === BLACK){
 		color = 'black';
