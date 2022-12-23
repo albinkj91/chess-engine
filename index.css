@@ -12,9 +12,8 @@ body{
 	width: 100px;
 	margin-right: 110px;
 	margin-top: 80px;
+	border: #502020 2px solid;
 	border-radius: 5px;
-	background-color: #502020;
-	box-shadow: 5px 5px 10px;
 }
 
 #taken-black{
@@ -25,9 +24,8 @@ body{
 	width: 100px;
 	margin-left: 150px;
 	margin-top: 80px;
+	border: #eeddaa 2px solid;
 	border-radius: 5px;
-	background-color: #eeddaa;
-	box-shadow: 5px 5px 10px;
 }
 
 #black{
@@ -88,6 +86,16 @@ body{
 	justify-content: center;
 }
 
+img::selection {
+	background-color: transparent;
+	color: #000;
+}
+
+img::-moz-selection {
+	background-color: transparent;
+	color: #000;
+}
+
 .mark{
 	height: 40px;
 	width: 40px;
@@ -97,8 +105,10 @@ body{
 
 #popup{
 	position: absolute;
+	flex-direction: column;
+	align-items: center;
 	width: 800px;
-	height: 400px;
+	height: 250px;
 	background-color: #eeddaa;
 	margin-top: 200px;
 	margin-left: 13px;
@@ -109,4 +119,12 @@ body{
 
 #popup h1{
 	font-size: 40px;
+}
+
+#popup img{
+	width: 100px;
+}
+
+#popup img:hover{
+	background-color: #308080;
 }

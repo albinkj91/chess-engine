@@ -15,11 +15,13 @@ const QUEEN = 'queen';
 const KING = 'king';
 const takenWhite = [];
 const takenBlack = [];
+const x = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const promotionPieces = [ROOK, KNIGHT, QUEEN, BISHOP];
+
 let turn = WHITE;
 let selectedPiece;
 let whitePawns = [];
 let blackPawns = [];
-let x = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 let currentColor = white;
 
 function Piece(type, rank, file, color){
@@ -206,26 +208,46 @@ const removeExpiredEnPassant = (color) =>{
 
 const promote = (piece) =>{
 	if(piece.type === PAWN){
-		if(piece.color === BLACK && piece.rank === 0){
-			getAndPlacePromotionPiece(BLACK);
-		}else if(piece.color === WHITE && piece.rank === 7){
-			getAndPlacePromotionPiece(WHITE);
+		if(piece.color === BLACK && piece.rank === 0
+			|| piece.color === WHITE && piece.rank === 7){
+			getAndPlacePromotionPiece(piece);
 		}
 	}
 };
 
-const getAndPlacePromotionPiece = (color) =>{
-	presentOptions(color);
+const getAndPlacePromotionPiece = (piece) =>{
+	presentOptions(piece);
 };
 
-const presentOptions = (color) =>{
-	let content = document.getElementById('content');
-	let popup = document.createElement('div');
-	let title = document.createElement('h1');
-	title.innerHTML = 'Choose a promotion piece:';
-	popup.appendChild(title);
-	popup.id = 'popup';
-	content.appendChild(popup);
+const presentOptions = (piece) =>{
+	let color;
+	if(piece.color === BLACK){
+		color = 'black';
+	}else{
+		color = 'white';
+	}
+
+	let popup = document.getElementById('popup');
+	popup.hidden = false;
+	popup.style.display = 'flex';
+	let pieces = document.getElementById('pieces');
+
+	for(let i = 0; i < 4; i++){
+		let selectionPiece = {type: promotionPieces[i], element: document.createElement('img')};
+		selectionPiece.element.id = selectionPiece.type;
+		selectionPiece.element.src = `./assets/${color}_${promotionPieces[i]}.svg`;
+		selectionPiece.element.addEventListener('click', e => promotionSelection(piece, e.originalTarget.id, pieces));
+		pieces.appendChild(selectionPiece.element);
+	}
+};
+
+const promotionSelection = (piece, selectedType, toClear) =>{
+	getPiece(piece.rank, piece.file).type = selectedType
+	popup.hidden = true;
+	popup.style.display = 'none';
+	toClear.innerHTML = '';
+	clearBoard();
+	renderBoard();
 };
 
 const highlightValidMoves = (moves) =>{
@@ -284,6 +306,7 @@ const unmarkTile = (tile) =>{
 
 const configPiece = (tile, piece) =>{
 	const img = document.createElement('img');
+	img.draggable = false;
 	tile.addEventListener('mouseenter', () => {
 		markTile(img, '#308080');
 	});
@@ -384,6 +407,7 @@ const renderBoard = () =>{
 			}
 
 			tile.style.backgroundColor = currentColor;
+			tile.draggable = false;
 			if(currentColor === black){
 				currentColor = white;
 			}else{
