@@ -112,6 +112,75 @@ const getValidKingMoves = (piece) =>{
 	return moves;
 };
 
+const getNorthernMoves = (rank, file) =>{
+	let moves = [];
+	rank++;
+	while(rank < 8){
+		if(getPiece(rank, file) !== 0){
+			moves.push({rank: rank, file: file});
+			break;
+		}
+		moves.push({rank: rank, file: file});
+		rank++;
+	}
+	return moves;
+};
+
+const getSouthernMoves = (rank, file) =>{
+	let moves = [];
+	rank--;
+	while(rank >= 0){
+		if(getPiece(rank, file) !== 0){
+			moves.push({rank: rank, file: file});
+			break;
+		}
+		moves.push({rank: rank, file: file});
+		rank--;
+	}
+	return moves;
+};
+
+const getEasternMoves = (rank, file) =>{
+	let moves = [];
+	file++;
+	while(file < 8){
+		if(getPiece(rank, file) !== 0){
+			moves.push({rank: rank, file: file});
+			break;
+		}
+		moves.push({rank: rank, file: file});
+		file++;
+	}
+	return moves;
+};
+
+const getWesternMoves = (rank, file) =>{
+	let moves = [];
+	file--;
+	while(file >= 0){
+		if(getPiece(rank, file) !== 0){
+			moves.push({rank: rank, file: file});
+			break;
+		}
+		moves.push({rank: rank, file: file});
+		file--;
+	}
+	return moves;
+};
+
+const getValidRookMoves = (piece) =>{
+	let moves = getNorthernMoves(piece.rank, piece.file);
+	moves.push(getSouthernMoves(piece.rank, piece.file));
+	moves.push(getWesternMoves(piece.rank, piece.file));
+	moves.push(getEasternMoves(piece.rank, piece.file));
+	console.log(moves);
+
+	return moves
+		.flatMap(x => x)
+		.filter(x => getPiece(x.rank, x.file) === 0
+			|| getPiece(x.rank, x.file).color !== turn);
+};
+
 const getValidPawnMoves = (piece) =>{
 	let moves = [];
 	if(piece.color === BLACK){
@@ -274,6 +343,9 @@ const getValidMoves = (piece) =>{
 		case KING:
 			moves = getValidKingMoves(piece);
 			break;
+		case ROOK:
+			moves = getValidRookMoves(piece);
+			break
 		default:
 			console.log('Moves for this piece type not yet implemented');
 	}
