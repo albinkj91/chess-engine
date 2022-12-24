@@ -249,6 +249,22 @@ const getValidQueenMoves = (piece) =>{
 			|| getPiece(x.rank, x.file).color !== turn);
 };
 
+const getValidKnightMoves = (piece) =>{
+	let moves = [];
+	if(piece.rank > 1 && piece.file < 7)	moves.push({rank: piece.rank - 2, file: piece.file + 1});
+	if(piece.rank > 1 && piece.file > 0)	moves.push({rank: piece.rank - 2, file: piece.file - 1});
+	if(piece.rank < 6 && piece.file < 7)	moves.push({rank: piece.rank + 2, file: piece.file + 1});
+	if(piece.rank < 6 && piece.file > 0)	moves.push({rank: piece.rank + 2, file: piece.file - 1});
+	if(piece.rank < 7 && piece.file < 6)	moves.push({rank: piece.rank + 1, file: piece.file + 2});
+	if(piece.rank > 0 && piece.file < 6)	moves.push({rank: piece.rank - 1, file: piece.file + 2});
+	if(piece.rank < 7 && piece.file > 1)	moves.push({rank: piece.rank + 1, file: piece.file - 2});
+	if(piece.rank > 0 && piece.file > 1)	moves.push({rank: piece.rank - 1, file: piece.file - 2});
+
+	return moves
+		.filter(x => getPiece(x.rank, x.file) === 0
+			|| getPiece(x.rank, x.file).color !== turn);
+};
+
 const getValidBishopMoves = (piece) =>{
 	let moves = getNorthWesternMoves(piece.rank, piece.file);
 	moves.push(getNorthEasternMoves(piece.rank, piece.file));
@@ -277,7 +293,7 @@ const getValidPawnMoves = (piece) =>{
 	let moves = [];
 	if(piece.color === BLACK){
 		if(piece.firstMove && getPiece(piece.rank-2, piece.file) === 0 && getPiece(piece.rank-1, piece.file) === 0){
-			moves.push({rank: piece.rank - 2, file: piece.file});
+			moves.push({rank: piece.rank-2, file: piece.file});
 			if(piece.file > 0
 				&& getPiece(piece.rank-2, piece.file-1) !== 0
 				&& getPiece(piece.rank-2, piece.file-1).type === PAWN
@@ -291,23 +307,23 @@ const getValidPawnMoves = (piece) =>{
 			}
 		}
 		if(piece.rank > 0 && getPiece(piece.rank-1, piece.file) === 0){
-			moves.push({rank: piece.rank - 1, file: piece.file});
+			moves.push({rank: piece.rank-1, file: piece.file});
 		}
 		if(piece.rank > 0 && piece.file > 0
 			&& getPiece(piece.rank-1, piece.file-1) !== 0
 			&& getPiece(piece.rank-1, piece.file-1).color !== turn){
-			moves.push({rank: piece.rank - 1, file: piece.file - 1});
+			moves.push({rank: piece.rank-1, file: piece.file-1});
 		}
 		if(piece.rank > 0 && piece.file < 7
 			&& getPiece(piece.rank-1, piece.file+1) !== 0
 			&& getPiece(piece.rank-1, piece.file+1).color !== turn){
-			moves.push({rank: piece.rank - 1, file: piece.file + 1});
+			moves.push({rank: piece.rank-1, file: piece.file+1});
 		}
 		getEnPassantMoves(piece, boardState)
-			.forEach(x => moves.push({rank: x.rank - 1, file: x.file, enPassantMove: true}));
+			.forEach(x => moves.push({rank: x.rank-1, file: x.file, enPassantMove: true}));
 	}else{
-		if(piece.firstMove && getPiece(piece.rank + 2, piece.file) === 0 && getPiece(piece.rank + 1, piece.file) === 0){
-			moves.push({rank: piece.rank + 2, file: piece.file});
+		if(piece.firstMove && getPiece(piece.rank+2, piece.file) === 0 && getPiece(piece.rank+1, piece.file) === 0){
+			moves.push({rank: piece.rank+2, file: piece.file});
 			if(piece.file > 0
 				&& getPiece(piece.rank+2, piece.file-1) !== 0
 				&& getPiece(piece.rank+2, piece.file-1).type === PAWN
@@ -321,20 +337,20 @@ const getValidPawnMoves = (piece) =>{
 			}
 		}
 		if(piece.rank < 7 && getPiece(piece.rank+1, piece.file) === 0){
-			moves.push({rank: piece.rank + 1, file: piece.file});
+			moves.push({rank: piece.rank+1, file: piece.file});
 		}
 		if(piece.rank < 7 && piece.file > 0
 			&& getPiece(piece.rank+1, piece.file-1) !== 0
 			&& getPiece(piece.rank+1, piece.file-1).color !== turn){
-			moves.push({rank: piece.rank + 1, file: piece.file - 1});
+			moves.push({rank: piece.rank+1, file: piece.file - 1});
 		}
 		if(piece.rank < 7 && piece.file < 7
 			&& getPiece(piece.rank+1, piece.file+1) !== 0
 			&& getPiece(piece.rank+1, piece.file+1).color !== turn){
-			moves.push({rank: piece.rank + 1, file: piece.file + 1});
+			moves.push({rank: piece.rank+1, file: piece.file + 1});
 		}
 		getEnPassantMoves(piece, boardState)
-			.forEach(x => moves.push({rank: x.rank + 1, file: x.file, enPassantMove: true}));
+			.forEach(x => moves.push({rank: x.rank+1, file: x.file, enPassantMove: true}));
 	}
 	return moves;
 };
@@ -344,8 +360,8 @@ const getEnPassantMoves = (piece, boardState) =>{
 		.flatMap(x => x)
 		.filter(x =>
 			x.enPassant && x.color !== piece.color &&
-			(x.file === piece.file + 1 && x.rank === piece.rank
-			|| x.file === piece.file - 1 && x.rank === piece.rank));
+			(x.file === piece.file+1 && x.rank === piece.rank
+			|| x.file === piece.file-1 && x.rank === piece.rank));
 };
 
 const enPassantTake = (piece, rank, file) =>{
@@ -440,8 +456,13 @@ const getValidMoves = (piece) =>{
 			break
 		case BISHOP:
 			moves = getValidBishopMoves(piece);
+			break;
+		case KNIGHT:
+			moves = getValidKnightMoves(piece);
+			break;
 		case QUEEN:
 			moves = getValidQueenMoves(piece);
+			break;
 		default:
 			console.log('Moves for this piece type not yet implemented');
 	}
