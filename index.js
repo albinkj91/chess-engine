@@ -490,27 +490,86 @@ const getKing = (color) =>{
 		.filter(x => x.type === KING && x.color === color)[0];
 };
 
-const isCheck = (color, rank, file) =>{
-	let pieces;
-	let moves;
-
+getPiecesByColor = (color) =>{
 	if(color === BLACK){
-		pieces = getPiecesOnBoard(WHITE);
+		return getPiecesOnBoard(WHITE);
 	}else{
-		pieces = getPiecesOnBoard(BLACK);
+		return getPiecesOnBoard(BLACK);
 	}
+};
 
-	moves = getAllMoves(pieces);
+const isCheck = (color) =>{
+	let king = getKing(color);
+	return isPosChecked(color, king.rank, king.file);
+};
+
+const isPosChecked = (color, rank, file) =>{
+	let pieces = getPiecesByColor(color);
+	let moves = getAllMoves(pieces);
 	return containsPosition(moves, {rank: rank, file: file});
 };
 
+const evalPossibleMove = (piece, color, x) =>{
+	let taken = color === BLACK ? takenWhite : takenBlack;
+	let oldRank = piece.rank;
+	let oldFile = piece.file;
+	let takenCount = taken.length;
+	movePiece(piece, x.rank, x.file);
+	let check = isCheck(color)
+
+	if(taken.length > takenCount){
+		revertMoveWithCapture(piece, oldRank, oldFile, taken);
+	}else{
+		movePiece(piece, oldRank, oldFile);
+	}
+
+	if(!check){
+		return x;
+	}
+};
+
 const isCheckMate = (color) =>{
-	//TODO: Do this.
-	let king = getKing(color);
-	moves = getAllMoves([king]);
-	moves = moves.filter(x => !isCheck(color, x.rank, x.file));
-	console.log('Possible moves: ', moves);
+	let pieces = getPiecesOnBoard(color);
+	let moves = [];
+	pieces.forEach(p => p.validMoves = getValidMoves(p));
+
+	moves = pieces.map(p =>
+		p.validMoves
+			.filter(x => evalPossibleMove(p, color, x)))
+		.flatMap(x => x);
+
 	return moves.length === 0;
+};
+
+const isStalemate = () =>{
+	let kingWhite = getKing(WHITE);
+	let kingBlack = getKing(BLACK);
+
+	if(!isCheck(WHITE)){
+		whiteKingMoves = getValidMoves(kingWhite);
+		result = whiteKingMoves
+			.filter(x => isPosChecked(WHITE, x.rank, x.file))
+			.length;
+		if(result === 0){
+			return true;
+		}
+	}
+	if(!isCheck(BLACK)){
+		blackKingMoves = getValidMoves(kingBlack);
+		result = blackKingMoves
+			.filter(x => isPosChecked(BLACK, x.rank, x.file))
+			.length;
+		if(result === 0){
+			return true;
+		}
+	}
+	return false;
+};
+
+const isDraw = () =>{
+	if(isStalemate){
+		return true;
+	}
 };
 
 const highlightTile = (tile, color) =>{
@@ -519,7 +578,7 @@ const highlightTile = (tile, color) =>{
 
 const markTile = (tile, color) =>{
 	const piece = getPieceByTile(tile.parentElement);
-	if(piece.color === turn){
+	if(piece.color === piece.color){
 		tile.style.boxShadow = '4px 4px 4px black';
 		tile.style.border = `4px solid ${color}`;
 		tile.style.borderRadius = '3px';
@@ -576,8 +635,48 @@ const containsPosition = (moves, position) =>{
 	return false;
 };
 
-// const handleMove = () =>{
-// };
+const revertMoveWithCapture = (piece, oldRank, oldFile, takenPieces) =>{
+	movePiece(piece, oldRank, oldFile);
+	let captured = takenPieces.pop();
+	setPiece(captured.rank, captured.file, captured);
+};
+
+const handleMove = (selectedPiece, rank, file) =>{
+	let taken = selectedPiece.color === BLACK ? takenWhite : takenBlack;
+	let takenCount = taken.length;
+	let oldRank = selectedPiece.rank;
+	let oldFile = selectedPiece.file;
+
+	movePiece(selectedPiece, rank, file);
+	enPassantTake(selectedPiece, rank, file);
+
+	if(isCheck(selectedPiece.color)){
+		if(taken.length > takenCount){
+			revertMoveWithCapture(selectedPiece, oldRank, oldFile, taken);
+		}else{
+			movePiece(selectedPiece, oldRank, oldFile);
+		}
+
+		clearBoard();
+		renderBoard();
+		let king = getKing(selectedPiece.color);
+		let kingTile = getTile(king.rank, king.file);
+		kingTile.style.backgroundColor = 'red';
+	}else{
+		selectedPiece.firstMove = false;
+		promote(selectedPiece);
+		swapTurn();
+
+		if(isCheck(turn) && isCheckMate(turn)){
+			console.log('game over');
+		}
+
+		renderTaken(takenBlackArea, takenBlack);
+		renderTaken(takenWhiteArea, takenWhite);
+		clearBoard();
+		renderBoard();
+	}
+};
 
 const tileClick = (tile) =>{
 	const rank = parseInt(tile.id[0]);
@@ -595,27 +694,7 @@ const tileClick = (tile) =>{
 			highlightValidMoves(selectedPiece.validMoves);
 		}
 	}else if(containsPosition(selectedPiece.validMoves, {rank: rank, file: file})){
-		let king = getKing(selectedPiece.color);
-
-		if(isCheck(selectedPiece.color, king.rank, king.file)){
-			if(isCheckMate(selectedPiece.color)){
-				console.log('game over');
-			}
-			clearBoard();
-			renderBoard();
-			let kingTile = getTile(king.rank, king.file);
-			kingTile.style.backgroundColor = 'red';
-		}else{
-			movePiece(selectedPiece, rank, file);
-			enPassantTake(selectedPiece, rank, file);
-			selectedPiece.firstMove = false;
-			promote(selectedPiece);
-			swapTurn();
-			renderTaken(takenBlackArea, takenBlack);
-			renderTaken(takenWhiteArea, takenWhite);
-			clearBoard();
-			renderBoard();
-		}
+		handleMove(selectedPiece, rank, file);
 		selectedPiece = undefined;
 	}else{
 		selectedPiece = undefined;
