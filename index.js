@@ -23,6 +23,7 @@ let selectedPiece;
 let whitePawns = [];
 let blackPawns = [];
 let currentColor = white;
+let gameHasEnded = false;
 
 function Piece(type, rank, file, color){
 	this.type = type,
@@ -413,7 +414,13 @@ const getAndPlacePromotionPiece = (piece) =>{
 		let selectionPiece = {type: promotionPieces[i], element: document.createElement('img')};
 		selectionPiece.element.id = selectionPiece.type;
 		selectionPiece.element.src = `./assets/${color}_${promotionPieces[i]}.svg`;
-		selectionPiece.element.addEventListener('click', e => promotionSelection(piece, e.originalTarget.id, pieces));
+		
+		selectionPiece.element.addEventListener('click', e => {
+			if(!gameHasEnded){
+				promotionSelection(piece, e.originalTarget.id, pieces);
+			}
+		});
+
 		pieces.appendChild(selectionPiece.element);
 	}
 };
@@ -546,20 +553,22 @@ const isStalemate = () =>{
 	let kingBlack = getKing(BLACK);
 
 	if(!isCheck(WHITE)){
-		whiteKingMoves = getValidMoves(kingWhite);
-		result = whiteKingMoves
+		let whiteKingMoves = getValidMoves(kingWhite);
+		let moveCount = whiteKingMoves.length;
+		let result = whiteKingMoves
 			.filter(x => isPosChecked(WHITE, x.rank, x.file))
 			.length;
-		if(result === 0){
+		if(result > 0 && result === moveCount){
 			return true;
 		}
 	}
 	if(!isCheck(BLACK)){
-		blackKingMoves = getValidMoves(kingBlack);
-		result = blackKingMoves
+		let blackKingMoves = getValidMoves(kingBlack);
+		let moveCount = blackKingMoves.length;
+		let result = blackKingMoves
 			.filter(x => isPosChecked(BLACK, x.rank, x.file))
 			.length;
-		if(result === 0){
+		if(result > 0 && result === moveCount){
 			return true;
 		}
 	}
@@ -567,9 +576,10 @@ const isStalemate = () =>{
 };
 
 const isDraw = () =>{
-	if(isStalemate){
+	if(isStalemate()){
 		return true;
 	}
+	return false;
 };
 
 const highlightTile = (tile, color) =>{
@@ -595,10 +605,14 @@ const configPiece = (tile, piece) =>{
 	const img = document.createElement('img');
 	img.draggable = false;
 	tile.addEventListener('mouseenter', () => {
-		markTile(img, '#308080');
+		if(!gameHasEnded){
+			markTile(img, '#308080');
+		}
 	});
 	tile.addEventListener('mouseleave', () => {
-		unmarkTile(img);
+		if(!gameHasEnded){
+			unmarkTile(img);
+		}
 	});
 	tile.appendChild(img);
 	if(piece.color === 0){
@@ -668,7 +682,15 @@ const handleMove = (selectedPiece, rank, file) =>{
 		swapTurn();
 
 		if(isCheck(turn) && isCheckMate(turn)){
-			console.log('game over');
+			console.log('CHECKMATE');
+			if(turn === BLACK){
+				console.log('White Wins!');
+			}else{
+				console.log('Black Wins!');
+			}
+			gameHasEnded = true;
+		}else if(isDraw()){
+			console.log('DRAW');
 		}
 
 		renderTaken(takenBlackArea, takenBlack);
@@ -739,7 +761,9 @@ const renderBoard = () =>{
 			}
 
 			tile.addEventListener('click', () => {
-				tileClick(tile);
+				if(!gameHasEnded){
+					tileClick(tile);
+				}
 			});
 			board.appendChild(tile);
 		}
