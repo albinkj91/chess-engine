@@ -689,9 +689,11 @@ const handleMove = (selectedPiece, rank, file) =>{
 				console.log('Black Wins!');
 			}
 			gameHasEnded = true;
-		}else if(isDraw()){
+			//TODO: Fix this
+		}/*else if(isDraw()){
 			console.log('DRAW');
-		}
+			gameHasEnded = true;
+		}*/
 
 		renderTaken(takenBlackArea, takenBlack);
 		renderTaken(takenWhiteArea, takenWhite);
