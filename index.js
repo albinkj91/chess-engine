@@ -1,7 +1,8 @@
 const bottom = document.getElementById('bottom');
 const board = document.getElementById('board');
-const takenWhiteArea = document.getElementById('white');
-const takenBlackArea = document.getElementById('black');
+const takenWhiteArea = document.getElementById('taken-white');
+const takenBlackArea = document.getElementById('taken-black');
+const logArea = document.getElementById('log-text');
 
 const WHITE = 0;
 const BLACK = 1;
@@ -15,7 +16,7 @@ const QUEEN = 'queen';
 const KING = 'king';
 const takenWhite = [];
 const takenBlack = [];
-const x = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const rankLabels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const promotionPieces = [ROOK, KNIGHT, QUEEN, BISHOP];
 
 let turn = WHITE;
@@ -25,31 +26,33 @@ let blackPawns = [];
 let currentColor = white;
 let gameHasEnded = false;
 
-function Piece(type, rank, file, color){
-	this.type = type,
-	this.rank = rank,
-	this.file = file,
-	this.color = color,
-	this.firstMove = true,
-	this.enPassant = false,
-	this.validMoves = []
+const createPiece = (type, rank, file, color) => {
+	return {
+		type: type,
+		rank: rank,
+		file: file,
+		color: color,
+		firstMove: true,
+		enPassant: false,
+		validMoves: []
+	}
 };
 
 for(let i = 0; i < 8; i++){
-	blackPawns[i] = new Piece(PAWN, 1, i, BLACK);
-	whitePawns[i] = new Piece(PAWN, 6, i, WHITE);
+	blackPawns[i] = createPiece(PAWN, 1, i, BLACK);
+	whitePawns[i] = createPiece(PAWN, 6, i, WHITE);
 }
 
 const boardState = [
 	[
-		new Piece(ROOK, 0, 0, BLACK),
-		new Piece(KNIGHT, 0, 1, BLACK),
-		new Piece(BISHOP, 0, 2, BLACK),
-		new Piece(QUEEN, 0, 3, BLACK),
-		new Piece(KING, 0, 4, BLACK),
-		new Piece(BISHOP, 0, 5, BLACK),
-		new Piece(KNIGHT, 0, 6, BLACK),
-		new Piece(ROOK, 0, 7, BLACK)
+		createPiece(ROOK, 0, 0, BLACK),
+		createPiece(KNIGHT, 0, 1, BLACK),
+		createPiece(BISHOP, 0, 2, BLACK),
+		createPiece(QUEEN, 0, 3, BLACK),
+		createPiece(KING, 0, 4, BLACK),
+		createPiece(BISHOP, 0, 5, BLACK),
+		createPiece(KNIGHT, 0, 6, BLACK),
+		createPiece(ROOK, 0, 7, BLACK)
 	],
 	[0, 0, 0, 0, 0, 0, 0, 0],
 	[0, 0, 0, 0, 0, 0, 0, 0],
@@ -58,14 +61,14 @@ const boardState = [
 	[0, 0, 0, 0, 0, 0, 0, 0],
 	[0, 0, 0, 0, 0, 0, 0, 0],
 	[
-		new Piece(ROOK, 7, 0, WHITE),
-		new Piece(KNIGHT, 7, 1, WHITE),
-		new Piece(BISHOP, 7, 2, WHITE),
-		new Piece(QUEEN, 7, 3, WHITE),
-		new Piece(KING, 7, 4, WHITE),
-		new Piece(BISHOP, 7, 5, WHITE),
-		new Piece(KNIGHT, 7, 6, WHITE),
-		new Piece(ROOK, 7, 7, WHITE)
+		createPiece(ROOK, 7, 0, WHITE),
+		createPiece(KNIGHT, 7, 1, WHITE),
+		createPiece(BISHOP, 7, 2, WHITE),
+		createPiece(QUEEN, 7, 3, WHITE),
+		createPiece(KING, 7, 4, WHITE),
+		createPiece(BISHOP, 7, 5, WHITE),
+		createPiece(KNIGHT, 7, 6, WHITE),
+		createPiece(ROOK, 7, 7, WHITE)
 	]
 ];
 
@@ -222,6 +225,17 @@ const getWesternMoves = (rank, file) =>{
 	return moves;
 };
 
+const hasCastlingRight = (piece) =>{
+	if(piece.color === WHITE){
+		let cornerPiece = getPiece(7, 7);
+		return piece.firstMove
+			&& cornerPiece !== 0
+			&& cornerPiece.firstMove
+			&& getPiece(7, 6) === 0
+			&& getPiece(7, 5) === 0;
+	}
+};
+
 const getValidKingMoves = (piece) =>{
 	let moves = [];
 	if(piece.rank > 0)						moves.push({rank: piece.rank - 1, file: piece.file});
@@ -232,6 +246,12 @@ const getValidKingMoves = (piece) =>{
 	if(piece.rank < 7 && piece.file < 7)	moves.push({rank: piece.rank + 1, file: piece.file + 1});
 	if(piece.rank > 0 && piece.file < 7)	moves.push({rank: piece.rank - 1, file: piece.file + 1});
 	if(piece.rank < 7 && piece.file > 0)	moves.push({rank: piece.rank + 1, file: piece.file - 1});
+
+	//TODO: Castling
+	// if(hasCastlingRight(piece)){
+	// 	console.log('Can castle');
+	// 	moves.push({rank: piece.rank, file: piece.file + 3, isCastleMove: true})
+	// }
 
 	return moves
 		.filter(x => getPiece(x.rank, x.file) === 0
@@ -475,7 +495,7 @@ const getValidMoves = (piece) =>{
 			moves = getValidQueenMoves(piece);
 			break;
 		default:
-			console.log('Moves for this piece type not yet implemented');
+			console.log('Piece not found. This should never occur.');
 	}
 	return moves;
 };
@@ -531,8 +551,9 @@ const evalPossibleMove = (piece, color, x) =>{
 	}
 
 	if(!check){
-		return x;
+		return true;
 	}
+	return false;
 };
 
 const isCheckMate = (color) =>{
@@ -548,35 +569,57 @@ const isCheckMate = (color) =>{
 	return moves.length === 0;
 };
 
-const isStalemate = () =>{
-	let kingWhite = getKing(WHITE);
-	let kingBlack = getKing(BLACK);
+const isStalemate = (color) =>{
+	let king = getKing(color);
 
-	if(!isCheck(WHITE)){
-		let whiteKingMoves = getValidMoves(kingWhite);
-		let moveCount = whiteKingMoves.length;
-		let result = whiteKingMoves
-			.filter(x => isPosChecked(WHITE, x.rank, x.file))
+	if(!isCheck(color)){
+		let moves = getValidMoves(king);
+		let moveCount = moves.length;
+		let checkedKingMoves = moves
+			.filter(x => !evalPossibleMove(king, color, x))
 			.length;
-		if(result > 0 && result === moveCount){
-			return true;
-		}
-	}
-	if(!isCheck(BLACK)){
-		let blackKingMoves = getValidMoves(kingBlack);
-		let moveCount = blackKingMoves.length;
-		let result = blackKingMoves
-			.filter(x => isPosChecked(BLACK, x.rank, x.file))
-			.length;
-		if(result > 0 && result === moveCount){
+		let pieces = getPiecesOnBoard(color);
+		pieces = pieces.filter(x => x.type !== KING);
+		let pieceMoves = getAllMoves(pieces);
+		if(checkedKingMoves > 0 && checkedKingMoves === moveCount && pieceMoves.length === 0){
 			return true;
 		}
 	}
 	return false;
 };
 
+const isEven = (num) =>{
+	return num % 2 === 0;
+};
+
+const isDeadPosition = () =>{
+	let pieces = getPiecesOnBoard(BLACK);
+	pieces.push(getPiecesOnBoard(WHITE));
+	pieces = pieces.flatMap(x => x);
+
+	let kingCount = pieces.filter(x => x.type === KING).length;
+	let bishops = pieces.filter(x => x.type === BISHOP);
+
+	let bishopsOnBlack = bishops.filter(x =>
+		(isEven(x.rank) && isEven(x.file)) || (!isEven(x.rank) && !isEven(x.file))).length;
+
+	let bishopsOnWhite = bishops.filter(x =>
+		(!isEven(x.rank) && isEven(x.file)) || (isEven(x.rank) && !isEven(x.file))).length;
+
+	let bishopCount = bishops.length;
+	let knightCount = pieces.filter(x => x.type === KNIGHT).length;
+
+	if((pieces.length === 2 && kingCount === 2)
+		|| (pieces.length === 3 && kingCount === 2 && (bishopCount === 1 || knightCount === 1))
+		|| (pieces.length === 4 && (bishopsOnBlack === 2 || bishopsOnWhite === 2))){
+		guiLog('Dead Position.');
+		return true;
+	}
+	return false;
+};
+
 const isDraw = () =>{
-	if(isStalemate()){
+	if(isStalemate(BLACK) || isStalemate(WHITE) || isDeadPosition()){
 		return true;
 	}
 	return false;
@@ -649,6 +692,24 @@ const containsPosition = (moves, position) =>{
 	return false;
 };
 
+const guiLog = (text) =>{
+	logArea.value += `${text}\n`;
+	logArea.scrollTop = 99999;
+};
+
+const guiLogLineBreak = (columns) =>{
+	for(let i = 0; i < columns - 1; i++){
+		logArea.value += '-';
+	}
+	logArea.value += '\n';
+	logArea.scrollTop = 99999;
+}
+
+const guiLogMove = (fromRank, fromFile, toRank, toFile) =>{
+	logArea.value += `${8 - fromRank}${rankLabels[fromFile]} to ${8 - toRank}${rankLabels[toFile]}\n`;
+	logArea.scrollTop = 99999;
+};
+
 const revertMoveWithCapture = (piece, oldRank, oldFile, takenPieces) =>{
 	movePiece(piece, oldRank, oldFile);
 	let captured = takenPieces.pop();
@@ -677,23 +738,23 @@ const handleMove = (selectedPiece, rank, file) =>{
 		let kingTile = getTile(king.rank, king.file);
 		kingTile.style.backgroundColor = 'red';
 	}else{
+		guiLogMove(oldRank, oldFile, rank, file);
 		selectedPiece.firstMove = false;
 		promote(selectedPiece);
 		swapTurn();
 
 		if(isCheck(turn) && isCheckMate(turn)){
-			console.log('CHECKMATE');
+			guiLog('Checkmate.');
 			if(turn === BLACK){
-				console.log('White Wins!');
+				guiLog('White Wins!');
 			}else{
-				console.log('Black Wins!');
+				guiLog('Black Wins!');
 			}
 			gameHasEnded = true;
-			//TODO: Fix this
-		}/*else if(isDraw()){
-			console.log('DRAW');
+		}else if(isDraw()){
+			guiLog('Draw.');
 			gameHasEnded = true;
-		}*/
+		}
 
 		renderTaken(takenBlackArea, takenBlack);
 		renderTaken(takenWhiteArea, takenWhite);
@@ -732,7 +793,7 @@ const renderTaken = (area, takenPieces) =>{
 	takenPieces.forEach(x => {
 		let img = document.createElement('img');
 		img.className = 'taken-img';
-		if(area.id === 'black'){
+		if(area.id === 'taken-black'){
 			img.src = `./assets/black_${x.type}.svg`;
 		}else{
 			img.src = `./assets/white_${x.type}.svg`;
@@ -778,3 +839,5 @@ const renderBoard = () =>{
 };
 
 renderBoard();
+guiLog('Welcome!');
+guiLogLineBreak(60);

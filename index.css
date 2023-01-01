@@ -19,13 +19,13 @@ body{
 #taken{
 	display: flex;
 	flex-direction: column;
-	row-gap: 200px;
+	row-gap: 20px;
 	margin-left: auto;
 }
 
 #taken-white{
-	display: flex;
-	min-height: 50px;
+	min-height: 328px;
+	width: 82px;
 	border: #502020 2px solid;
 	border-radius: 5px;
 	margin-left: auto;
@@ -33,8 +33,8 @@ body{
 }
 
 #taken-black{
-	display: flex;
-	min-height: 50px;
+	min-height: 328px;
+	width: 82px;
 	border: #eeddaa 2px solid;
 	border-radius: 5px;
 	padding: 5px;
@@ -50,21 +50,20 @@ textarea{
 	align-self: stretch;
 	border: none;
 	margin: 0;
+	padding-left: 10px;
+	color: #eeddaa;
 	background-color: #303030;
 	resize: none;
+	font-size: 16px;
+	font-family: 'FantasqueSansMonoRegular';
+	font-weight: normal;
+	font-style: normal;
+	overflow-y: scroll;
 }
 
 textarea:focus-visible{
 	border: none;
 	outline: none;
-}
-
-#black{
-	width: 80px;
-}
-
-#white{
-	width: 80px;
 }
 
 #taken-white img{
@@ -153,6 +152,7 @@ img::-moz-selection {
 
 #popup img{
 	width: 100px;
+	border-radius: 5px;
 }
 
 #popup img:hover{
